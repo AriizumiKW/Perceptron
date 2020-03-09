@@ -5,7 +5,7 @@ import random
 
 def perceptron():
     weight_vec = np.mat(np.array([0.0, 0.0, 0.0, 0.0], dtype='float64'))
-    bias = 0
+    bias = 0.0
     iteration = 1
     train_data = readfile('train.data')
     while iteration <= 20:
@@ -17,6 +17,8 @@ def perceptron():
                 bias += label
         iteration += 1
     test(weight_vec, bias)
+    print('weight_vec:', weight_vec)
+    print('bias:', bias)
 
 
 def test(weight_vec, bias):
@@ -35,8 +37,7 @@ def test(weight_vec, bias):
             else:
                 f_negative += 1
     accuracy = (t_positive + t_negative)/(t_positive + t_negative + f_positive + f_negative)
-    print(accuracy)
-    pass
+    print('accuracy:', accuracy)
 
 
 def readfile(fname):

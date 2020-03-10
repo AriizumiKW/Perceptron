@@ -9,20 +9,21 @@ def perceptron():
     iteration = 1
     train_data = readfile('train.data')
     while iteration <= 20:
-        random.shuffle(train_data)
+        random.shuffle(train_data) # comment out this line to disable shuffle
         for (feat_vec, label) in train_data:
             a = np.matmul(weight_vec, feat_vec) + bias
             if label*a <= 0: # label 1 as class-1, label -1 as class-3
                 weight_vec += feat_vec.T * label
                 bias += label
         iteration += 1
-    test(weight_vec, bias)
+    print('train accuracy:', test(weight_vec, bias, 'train.data'))
+    print('test accuracy:', test(weight_vec, bias, 'test.data'))
     print('weight_vec:', weight_vec)
     print('bias:', bias)
 
 
-def test(weight_vec, bias):
-    test_data = readfile('test.data')
+def test(weight_vec, bias, fname):
+    test_data = readfile(fname)
     t_positive, t_negative, f_positive, f_negative = 0, 0, 0, 0
     for (feat_vec, label) in test_data:
         a = np.matmul(weight_vec, feat_vec) + bias
@@ -37,7 +38,7 @@ def test(weight_vec, bias):
             else:
                 f_negative += 1
     accuracy = (t_positive + t_negative)/(t_positive + t_negative + f_positive + f_negative)
-    print('accuracy:', accuracy)
+    return accuracy
 
 
 def readfile(fname):

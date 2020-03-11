@@ -15,7 +15,7 @@ def main():
     accuracy_overall_train = 0.0
     accuracy_overall_test = 0.0
     while i < runs:
-        tuple = perceptron()  # set the lambda here for l2 regularisation
+        tuple = perceptron(coeff=0.01)  # set the lambda here for l2 regularisation
         accuracy_1vs23_train += tuple[0]
         accuracy_1vs23_test += tuple[1]
         accuracy_2vs13_train += tuple[2]
@@ -35,10 +35,10 @@ def main():
     print("overall test accuracy:" + str(accuracy_overall_test / runs))
 
 
-def perceptron():
-    (weight_vec_1_23, bias_1_23) = perceptron_1_23()
-    (weight_vec_2_13, bias_2_13) = perceptron_2_13()
-    (weight_vec_3_12, bias_3_12) = perceptron_3_12()
+def perceptron(coeff):
+    (weight_vec_1_23, bias_1_23) = perceptron_1_23(coeff)
+    (weight_vec_2_13, bias_2_13) = perceptron_2_13(coeff)
+    (weight_vec_3_12, bias_3_12) = perceptron_3_12(coeff)
     accuracy_1vs23_train = test_1_23(weight_vec_1_23, bias_1_23, 'train.data')
     accuracy_1vs23_test = test_1_23(weight_vec_1_23, bias_1_23, 'test.data')
     accuracy_2vs13_train = test_2_13(weight_vec_2_13, bias_2_13, 'train.data')
@@ -86,8 +86,8 @@ def perceptron():
     return (accuracy_1vs23_train, accuracy_1vs23_test, accuracy_2vs13_train, accuracy_2vs13_test, accuracy_3vs12_train,
             accuracy_3vs12_test, accuracy_overall_train, accuracy_overall_test)
 
-def perceptron_1_23():
-    weight_vec = np.mat(np.array([0.0, 0.0, 0.0, 0.0], dtype='float64'))
+def perceptron_1_23(coeff):
+    weight_vec = np.mat(np.array([0.0, 0.0, 0.0, 0.0], np.longdouble))
     bias = 0.0
     iteration = 1
     train_data = readfile('train.data')
@@ -100,14 +100,15 @@ def perceptron_1_23():
             else:
                 y = -1
             if y*a <= 0: # y=1 for class-1, y=-1 for class-2 and class-3
-                weight_vec += feat_vec.T * y
-                bias += y
+                weight_vec = weight_vec + (feat_vec.T * y) - (2 * coeff * weight_vec)
+                bias = bias + y
+                scalingDown(weight_vec, bias)
         iteration += 1
     return (weight_vec, bias)
 
 
-def perceptron_2_13():
-    weight_vec = np.mat(np.array([0.0, 0.0, 0.0, 0.0], dtype='float64'))
+def perceptron_2_13(coeff):
+    weight_vec = np.mat(np.array([0.0, 0.0, 0.0, 0.0], np.longdouble))
     bias = 0.0
     iteration = 1
     train_data = readfile('train.data')
@@ -120,14 +121,15 @@ def perceptron_2_13():
             else:
                 y = -1
             if y*a <= 0: # y=1 for class-2, y=-1 for class-1 and class-3
-                weight_vec += feat_vec.T * y
-                bias += y
+                weight_vec = weight_vec + (feat_vec.T * y) - (2 * coeff * weight_vec)
+                bias = bias + y
+                scalingDown(weight_vec, bias)
         iteration += 1
     return (weight_vec, bias)
 
 
-def perceptron_3_12():
-    weight_vec = np.mat(np.array([0.0, 0.0, 0.0, 0.0], dtype='float64'))
+def perceptron_3_12(coeff):
+    weight_vec = np.mat(np.array([0.0, 0.0, 0.0, 0.0], np.longdouble))
     bias = 0.0
     iteration = 1
     train_data = readfile('train.data')
@@ -140,8 +142,9 @@ def perceptron_3_12():
             else:
                 y = -1
             if y*a <= 0: # y=1 for class-3, y=-1 for class-1 and class-2
-                weight_vec += feat_vec.T * y
-                bias += y
+                weight_vec = weight_vec + (feat_vec.T * y) - (2 * coeff * weight_vec)
+                bias = bias + y
+                scalingDown(weight_vec, bias)
         iteration += 1
     return (weight_vec, bias)
 
@@ -207,7 +210,7 @@ def readfile(fname):
     with open(fname) as file:
         for line in file:
             the_list = re.split(',', line)
-            feat_vec = np.mat(np.array([[float(the_list[0])], [float(the_list[1])], [float(the_list[2])], [float(the_list[3])]]))
+            feat_vec = np.mat(np.array([[float(the_list[0])], [float(the_list[1])], [float(the_list[2])], [float(the_list[3])]]), dtype='float64')
             label = the_list[4]
             if label == 'class-1\n':
                 data.append((feat_vec, 1))
@@ -216,6 +219,12 @@ def readfile(fname):
             elif label == 'class-3\n':
                 data.append((feat_vec, 3))
     return data
+
+
+def scalingDown(weight_vec, bias):
+    if weight_vec[0,0] >= 1e+100:
+        weight_vec /= 1e+100
+        bias /= 1e+100
 
 
 if __name__ == "__main__":

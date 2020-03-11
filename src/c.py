@@ -3,7 +3,23 @@ import re
 import random
 
 
-def perceptron():
+def main():
+    if_show_you_the_message = False # if you want to know the weight_vector / bias calculated at each iteration
+    runs = 500 # how many times should we run to calculate average accuracy
+    i = 0
+    train_accuracy = 0.0
+    test_accuracy = 0.0
+    while i < runs:
+        tuple = perceptron(if_show_you_the_message)
+        train_accuracy += tuple[0]
+        test_accuracy += tuple[0]
+        i += 1
+    print('----------------------------------------------')
+    print('train accuracy of (a):' + str(train_accuracy/runs))
+    print('test accuracy of (a):' + str(test_accuracy/runs))
+
+
+def perceptron(message):
     weight_vec = np.mat(np.array([0.0, 0.0, 0.0, 0.0], dtype='float64'))
     bias = 0.0
     iteration = 1
@@ -16,10 +32,13 @@ def perceptron():
                 weight_vec += feat_vec.T * label
                 bias += label
         iteration += 1
-    print('train accuracy:', test(weight_vec, bias, 'train.data'))
-    print('test accuracy:', test(weight_vec, bias, 'test.data'))
-    print('weight_vec:', weight_vec)
-    print('bias:', bias)
+    train_accuracy = test(weight_vec, bias, 'train.data')
+    test_accuracy = test(weight_vec, bias, 'test.data')
+    if (message):
+        print('----------------------------------------------')
+        print('weight_vec:', weight_vec)
+        print('bias:', bias)
+    return (train_accuracy, test_accuracy)
 
 
 def test(weight_vec, bias, fname):
@@ -56,4 +75,4 @@ def readfile(fname):
 
 
 if __name__ == "__main__":
-    perceptron()
+    main()

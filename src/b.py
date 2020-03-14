@@ -4,31 +4,36 @@ import random
 
 
 def main():
-    if_show_you_the_message = False # if you want to know the weight_vector / bias calculated at each iteration
-    runs = 500 # how many times should we run to calculate average accuracy
+    # ----------------------------------------------------------------------
+    if_show_you_the_message = False  # if you want to know the weight_vector / bias calculated at each iteration
+    if_shuffle = True  # if shuffle or not
+    max_iteration_num = 20  # number of iterations
+    runs = 500  # how many times should we run to calculate average accuracy
+    # ----------------------------------------------------------------------
     i = 0
     train_accuracy = 0.0
     test_accuracy = 0.0
     while i < runs:
-        tuple = perceptron(if_show_you_the_message)
-        train_accuracy += tuple[0]
-        test_accuracy += tuple[0]
+        the_tuple = perceptron(if_show_you_the_message, if_shuffle, max_iteration_num)
+        train_accuracy += the_tuple[0]
+        test_accuracy += the_tuple[0]
         i += 1
     print('----------------------------------------------')
     print('train accuracy of (a):' + str(train_accuracy/runs))
     print('test accuracy of (a):' + str(test_accuracy/runs))
 
 
-def perceptron(message):
+def perceptron(message, shuffle, iter_num):
     weight_vec = np.mat(np.array([0.0, 0.0, 0.0, 0.0], dtype='float64'))
     bias = 0.0
     iteration = 1
     train_data = readfile('train.data')
-    while iteration <= 20:
-        random.shuffle(train_data) # comment out this line to disable shuffle
+    while iteration <= iter_num:
+        if shuffle:
+            random.shuffle(train_data)
         for (feat_vec, label) in train_data:
             a = np.matmul(weight_vec, feat_vec) + bias
-            if label*a <= 0: # label 1 as class-2, label -1 as class-3
+            if label*a <= 0:  # label 1 as class-2, label -1 as class-3
                 weight_vec += feat_vec.T * label
                 bias += label
         iteration += 1
@@ -46,12 +51,12 @@ def test(weight_vec, bias, fname):
     t_positive, t_negative, f_positive, f_negative = 0, 0, 0, 0
     for (feat_vec, label) in test_data:
         a = np.matmul(weight_vec, feat_vec) + bias
-        if label == 1: # positive, class-2, labeled as 1
+        if label == 1:  # positive, class-2, labeled as 1
             if a > 0:
                 t_positive += 1
             else:
                 f_positive += 1
-        elif label == -1: # negative, class-3, labeled as -1
+        elif label == -1:  # negative, class-3, labeled as -1
             if a < 0:
                 t_negative += 1
             else:

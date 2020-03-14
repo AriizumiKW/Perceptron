@@ -4,7 +4,12 @@ import random
 
 
 def main():
-    runs = 500 # how many times should we run to calculate average accuracy
+    # ----------------------------------------------------------------------
+    lam = 0  # set the lambda here for L2-regularisation (set to zero to disable L2-regularisation)
+    if_shuffle = True  # if shuffle or not
+    max_iteration_num = 20  # number of iterations
+    runs = 500  # how many times should we run to calculate average accuracy
+    # ----------------------------------------------------------------------
     i = 0
     accuracy_1vs23_train = 0.0
     accuracy_1vs23_test = 0.0
@@ -15,15 +20,15 @@ def main():
     accuracy_overall_train = 0.0
     accuracy_overall_test = 0.0
     while i < runs:
-        tuple = perceptron(coeff=0.01)  # set the lambda here for l2 regularisation
-        accuracy_1vs23_train += tuple[0]
-        accuracy_1vs23_test += tuple[1]
-        accuracy_2vs13_train += tuple[2]
-        accuracy_2vs13_test += tuple[3]
-        accuracy_3vs12_train += tuple[4]
-        accuracy_3vs12_test += tuple[5]
-        accuracy_overall_train += tuple[6]
-        accuracy_overall_test += tuple[7]
+        the_tuple = perceptron(lam, if_shuffle, max_iteration_num)
+        accuracy_1vs23_train += the_tuple[0]
+        accuracy_1vs23_test += the_tuple[1]
+        accuracy_2vs13_train += the_tuple[2]
+        accuracy_2vs13_test += the_tuple[3]
+        accuracy_3vs12_train += the_tuple[4]
+        accuracy_3vs12_test += the_tuple[5]
+        accuracy_overall_train += the_tuple[6]
+        accuracy_overall_test += the_tuple[7]
         i += 1
     print("train accuracy 1-vs-23:" + str(accuracy_1vs23_train / runs))
     print("test accuracy 1-vs-23:" + str(accuracy_1vs23_test / runs))
@@ -35,10 +40,10 @@ def main():
     print("overall test accuracy:" + str(accuracy_overall_test / runs))
 
 
-def perceptron(coeff):
-    (weight_vec_1_23, bias_1_23) = perceptron_1_23(coeff)
-    (weight_vec_2_13, bias_2_13) = perceptron_2_13(coeff)
-    (weight_vec_3_12, bias_3_12) = perceptron_3_12(coeff)
+def perceptron(lam, shuffle, iter_num):
+    (weight_vec_1_23, bias_1_23) = perceptron_1_23(lam, shuffle, iter_num)
+    (weight_vec_2_13, bias_2_13) = perceptron_2_13(lam, shuffle, iter_num)
+    (weight_vec_3_12, bias_3_12) = perceptron_3_12(lam, shuffle, iter_num)
     accuracy_1vs23_train = test_1_23(weight_vec_1_23, bias_1_23, 'train.data')
     accuracy_1vs23_test = test_1_23(weight_vec_1_23, bias_1_23, 'test.data')
     accuracy_2vs13_train = test_2_13(weight_vec_2_13, bias_2_13, 'train.data')
@@ -72,11 +77,11 @@ def perceptron(coeff):
         belief_is_class2 = np.matmul(weight_vec_2_13, feat_vec) + bias_2_13
         belief_is_class3 = np.matmul(weight_vec_3_12, feat_vec) + bias_3_12
         result = 0
-        if belief_is_class1>=belief_is_class2 and belief_is_class1>=belief_is_class3:
+        if belief_is_class1 >= belief_is_class2 and belief_is_class1 >= belief_is_class3:
             result = 1
-        elif belief_is_class2>=belief_is_class1 and belief_is_class2>=belief_is_class3:
+        elif belief_is_class2 >= belief_is_class1 and belief_is_class2 >= belief_is_class3:
             result = 2
-        elif belief_is_class3>=belief_is_class2 and belief_is_class3>=belief_is_class1:
+        elif belief_is_class3 >= belief_is_class2 and belief_is_class3 >= belief_is_class1:
             result = 3
         if result == label:
             successes += 1
@@ -86,63 +91,66 @@ def perceptron(coeff):
     return (accuracy_1vs23_train, accuracy_1vs23_test, accuracy_2vs13_train, accuracy_2vs13_test, accuracy_3vs12_train,
             accuracy_3vs12_test, accuracy_overall_train, accuracy_overall_test)
 
-def perceptron_1_23(coeff):
+def perceptron_1_23(lam, shuffle, iter_num):
     weight_vec = np.mat(np.array([0.0, 0.0, 0.0, 0.0], np.longdouble))
     bias = 0.0
     iteration = 1
     train_data = readfile('train.data')
-    while iteration <= 20:
-        random.shuffle(train_data)  # comment out this line to disable shuffle
+    while iteration <= iter_num:
+        if shuffle:
+            random.shuffle(train_data)
         for (feat_vec, label) in train_data:
             a = np.matmul(weight_vec, feat_vec) + bias
             if label == 1:
                 y = 1
             else:
                 y = -1
-            if y*a <= 0: # y=1 for class-1, y=-1 for class-2 and class-3
-                weight_vec = weight_vec + (feat_vec.T * y) - (2 * coeff * weight_vec)
+            if y*a <= 0:  # y=1 for class-1, y=-1 for class-2 and class-3
+                weight_vec = weight_vec + (feat_vec.T * y) - (2 * lam * weight_vec)
                 bias = bias + y
                 scalingDown(weight_vec, bias)
         iteration += 1
     return (weight_vec, bias)
 
 
-def perceptron_2_13(coeff):
+def perceptron_2_13(lam, shuffle, iter_num):
     weight_vec = np.mat(np.array([0.0, 0.0, 0.0, 0.0], np.longdouble))
     bias = 0.0
     iteration = 1
     train_data = readfile('train.data')
-    while iteration <= 20:
-        random.shuffle(train_data) # comment out this line to disable shuffle
+    while iteration <= iter_num:
+        if shuffle:
+            random.shuffle(train_data)
         for (feat_vec, label) in train_data:
             a = np.matmul(weight_vec, feat_vec) + bias
             if label == 2:
                 y = 1
             else:
                 y = -1
-            if y*a <= 0: # y=1 for class-2, y=-1 for class-1 and class-3
-                weight_vec = weight_vec + (feat_vec.T * y) - (2 * coeff * weight_vec)
+            if y*a <= 0:  # y=1 for class-2, y=-1 for class-1 and class-3
+                weight_vec = weight_vec + (feat_vec.T * y) - (2 * lam * weight_vec)
                 bias = bias + y
                 scalingDown(weight_vec, bias)
         iteration += 1
     return (weight_vec, bias)
 
 
-def perceptron_3_12(coeff):
+def perceptron_3_12(lam, shuffle, iter_num):
     weight_vec = np.mat(np.array([0.0, 0.0, 0.0, 0.0], np.longdouble))
     bias = 0.0
     iteration = 1
     train_data = readfile('train.data')
-    while iteration <= 20:
-        random.shuffle(train_data) # comment out this line to disable shuffle
+    while iteration <= iter_num:
+        if shuffle:
+            random.shuffle(train_data)
         for (feat_vec, label) in train_data:
             a = np.matmul(weight_vec, feat_vec) + bias
             if label == 3:
                 y = 1
             else:
                 y = -1
-            if y*a <= 0: # y=1 for class-3, y=-1 for class-1 and class-2
-                weight_vec = weight_vec + (feat_vec.T * y) - (2 * coeff * weight_vec)
+            if y*a <= 0:  # y=1 for class-3, y=-1 for class-1 and class-2
+                weight_vec = weight_vec + (feat_vec.T * y) - (2 * lam * weight_vec)
                 bias = bias + y
                 scalingDown(weight_vec, bias)
         iteration += 1
@@ -154,12 +162,12 @@ def test_1_23(weight_vec, bias, fname):
     t_positive, t_negative, f_positive, f_negative = 0, 0, 0, 0
     for (feat_vec, label) in test_data:
         a = np.matmul(weight_vec, feat_vec) + bias
-        if label == 1: # positive, y=1, class-1
+        if label == 1:  # positive, y=1, class-1
             if a > 0:
                 t_positive += 1
             else:
                 f_positive += 1
-        else: # negative, y=-1, class-2 and class-3
+        else:  # negative, y=-1, class-2 and class-3
             if a < 0:
                 t_negative += 1
             else:
@@ -172,12 +180,12 @@ def test_2_13(weight_vec, bias, fname):
     t_positive, t_negative, f_positive, f_negative = 0, 0, 0, 0
     for (feat_vec, label) in test_data:
         a = np.matmul(weight_vec, feat_vec) + bias
-        if label == 2: # positive, y=1, class-2
+        if label == 2:  # positive, y=1, class-2
             if a > 0:
                 t_positive += 1
             else:
                 f_positive += 1
-        else: # negative, y=-1, class-1 and class-3
+        else:  # negative, y=-1, class-1 and class-3
             if a < 0:
                 t_negative += 1
             else:
@@ -191,12 +199,12 @@ def test_3_12(weight_vec, bias, fname):
     t_positive, t_negative, f_positive, f_negative = 0, 0, 0, 0
     for (feat_vec, label) in test_data:
         a = np.matmul(weight_vec, feat_vec) + bias
-        if label == 3: # positive, y=1, class-3
+        if label == 3:  # positive, y=1, class-3
             if a > 0:
                 t_positive += 1
             else:
                 f_positive += 1
-        else: # negative, y=-1, class-1 and class-2
+        else:  # negative, y=-1, class-1 and class-2
             if a < 0:
                 t_negative += 1
             else:
